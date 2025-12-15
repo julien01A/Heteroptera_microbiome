@@ -14,7 +14,7 @@ The following dependencies and versions were used:
 # vsearch: version 2.17.0
 ```
 
-The workflow starts with a pre-processing, including read merging, denoising, and dereplication:
+The workflow starts with a pre-processing called `FROGS_1 Pre-process`, including read merging, denoising, and dereplication:
 ```
 #### Galaxy / FROGS_1 Pre-process ####
 # Tool Parameters
@@ -35,32 +35,36 @@ The workflow starts with a pre-processing, including read merging, denoising, an
 # 3' primer: GGATTAGATACCCTGG
 ```
 
-#########################################
-#### Galaxy / FROGS_2 Clustering swarm [Single-linkage clustering on sequences] ####
+The workflow continues with a clustering step called `FROGS_2 Clustering swarm`, which performs single-linkage clustering on sequences:
+```
+#### Galaxy / FROGS_2 Clustering swarm ####
 # Tool Parameters
 # Sequences file: FROGS_1 Pre-process: dereplicated.fasta
 # Count file: FROGS_1 Pre-process: count.tsv
 # FROGS guidelines version: 3.2
 # 	Aggregation distance clustering: 1
 # 	Refine clustering: Yes, refine clustering with --fastidious swarm option
-#########################################
+```
 
-#########################################
-#### Galaxy / FROGS_3 Clustering swarm [Single-linkage clustering on sequences] ####
+The workflow then proceeds with a clustering step called `FROGS_3 Remove chimera`, which removes PCR chimera in each sample:
+```
+#### FROGS_3 Remove chimera ####
 # Tool Parameters
 # Sequences file (format: FASTA): FROGS_2 Clustering swarm: seed_sequences.fasta
 # Abundance type: biom
 # Abundance file (format: BIOM): FROGS_2 Clustering swarm: clustering_abundance.biom
-#########################################
+```
 
-#########################################
+The workflow then includes a statistical analysis step called `FROGS_Cluster_Stat`, which processes metrics on clusters:
+```
 #### Galaxy / FROGS_Cluster_Stat [Process some metrics on clusters] ####
 # Tool Parameters
 # Abundance file: FROGS_2 Clustering swarm: clustering_abundance.biom
-#########################################
+```
 
-#########################################
-#### Galaxy / FROGS_4 Cluster filters [Filters clusters on several criteria] ####
+Next, the workflow applies a filtering step called `FROGS_4 Cluster filters`, where clusters are filtered based on several criteria:
+```
+#### Galaxy / FROGS_4 Cluster filters ####
 # Tool Parameters
 # Sequence file: FROGS_3 Remove Chimera: non_chimera.fasta
 # Abundance file: FROGS3_ Remove chimera: non_chimera_abundance.biom
@@ -70,37 +74,41 @@ The workflow starts with a pre-processing, including read merging, denoising, an
 # 	Minimum number of sequences to keep cluster: 2
 # N biggest clusters: Not available.
 # Search for contaminant clusters.: no
-#########################################
+```
 
-#########################################
-#### Galaxy / FROGS_5 Taxonomic affiliation [Taxonomic affiliation of each ASV's seed by RDPtools and BLAST] ####
+The workflow then performs a taxonomic assignment step called `FROGS_5 Taxonomic affiliation`, in which each ASV seed is taxonomically affiliated using RDPtools and BLAST:
+```
+#### Galaxy / FROGS_5 Taxonomic affiliation ####
 # Tool Parameters
 # reference database: silva_138_16S
 # Also perform RDP assignation?: Yes
 # Taxonomic ranks: Domain Phylum Class Order Family Genus Species
 # Sequence file: FROGS_4 Cluster filters: clusterFilters_sequences.fasta
 # Abundance file: FROGS_4 Cluster filters: clusterFilters_abundance.biom
-#########################################
+```
 
-#########################################
+The workflow includes a conversion step called `FROGS BIOM to TSV`, which converts the BIOM file into a TSV file:
+```
 #### Galaxy / FROGS BIOM to TSV [Converts a BIOM file in a TSV file 1] ####
 # Tool Parameters
 # Abundance file: FROGS_5 Taxonomic affiliation: affiliation_abundance.biom
 # Sequences file (optional): FROGS_4 Cluster filters: clusterFilters_sequences.fasta
 # Extract multi-alignments: Yes
-#########################################
+```
 
-# Dowload and inspect the .tsv file. Rename the sample names with the final names. Then, reupload the new file called: abundance_cleaned.tsv
+Dowload and inspect the `.tsv` file. Rename the sample names with the final names. Then, reupload the modified file called: `abundance_cleaned.tsv`
 
-#########################################
-#### Galaxy / FROGS TSV to BIOM [Converts a TSV file in a BIOM file 1] ####
+Then, upload the cleaned TSV file `abundance_cleaned.tsv` and convert it back into a BIOM file using FROGS TSV to BIOM:
+```
+#### Galaxy / FROGS TSV to BIOM ####
 # Tool Parameters
 # Abundance TSV File: 5-abundance_cleand.tsv
 # Multi_affiliation TSV File: Yes
-#########################################
+```
 
-#########################################
-#### Galaxy / FROGS Affiliation postprocess [Aggregates ASVs based on alignment metrics] ####
+The workflow then includes a post-processing step called `FROGS Affiliation postprocess`, which aggregates ASVs based on alignment metrics:
+```
+#### Galaxy / FROGS Affiliation postprocess ####
 # Sequence file: FROGS Affiliation postprocess: sequences.fasta
 # Abundance file: FROGS Affiliation postprocess: affiliation_abundance.biom
 # Minimum prevalence method: all
@@ -109,32 +117,32 @@ The workflow starts with a pre-processing, including read merging, denoising, an
 # 	Minimum proportion of sequences abundancy to keep cluster: 5e-05
 # N biggest clusters: Not available.
 # Search for contaminant clusters.: no
-#########################################
+```
 
-#########################################
-#### Galaxy / FROGS Tree [Reconstruction of phylogenetic tree] ####
+The workflow then performs a phylogenetic analysis step called `FROGS Tree`, which reconstructs the phylogenetic tree based on 16S sequences of ASVs:
+```
+#### Galaxy / FROGS Tree ####
 # Tool Parameters
 # Sequence file: FROGS_4 Cluster filters: clusterFilters_sequences.fasta
 # Biom file: FROGS_4 Cluster filters: clusterFilters_abundance.biom
-#########################################
+```
 
-# Creation of a variable.tsv file containing the species and family name of each sample.
+Then, we created a `variable.tsv` file containing the `species` and `family` names for each sample and we uploaded it on Galaxy.
 
-#########################################
-#### Galaxy / FROGSSTAT Phyloseq Import Data [from 3 files: biomfile, samplefile, treefile] ####
+Finally, to create one final microbiome data file `8-Stinkbugs_microbiome.rdata` available for numeric analysis, we used 3 files: `biomfile`, `samplefile`, `treefile` using a final step called `FROGSSTAT Phyloseq Import Data` as follow:
+```
+#### Galaxy / FROGSSTAT Phyloseq Import Data ####
 # Tool Parameters
 # Abundance biom file with taxonomical metadata (format: BIOM): FROGS_4 Cluster filters: clusterFilters_abundance.biom
 # Metadata associated to samples (format: TSV): variable.tsv
 # Taxonomic tree file (format: Newick): FROGS Tree: tree.nwk
 # Names of taxonomic levels: Kingdom Phylum Class Order Family Genus Species
 # Do you want to normalise your data ? No, keep abundance as it is.
-#########################################
+```
 
-# One final file is obtained: 8-Stinkbugs_microbiome.rdata
-
-# Additionnaly, we create a secundary abundance file grouping all the bacteria-identified species forming a same genus together to have a Genus-identification for each sample. This secundary abundance file was created in three steps. 
-# Step 1. Create a file identifying each genus for each ASV. This file was called: 5-abundance_split_2.xlsx, and was obtained from abundance_cleaned.tsv using the following R script:
-#########################################
+Additionally, we created a secondary microbiome data file by grouping all bacteria-identified ASV species belonging to the same genus, in order to obtain a bacterial genus-level identification for each sample. This secondary microbiome data file was generated in three steps.
+**Step 1.** Create a file identifying each genus for each ASV. This file was called: `5-abundance_split_2.xlsx`, and was obtained from `abundance_cleaned.tsv` using the following R script:
+```
 #### R ####
 library(tidyr)
 library(dplyr)
@@ -145,10 +153,10 @@ tax$Taxonomy_clean <- gsub("^;|;$", "", tax$Taxonomy_clean) # Remove any leading
 tax <- tax %>% select(-rdp_tax_and_bootstrap) # Remove the rdp_tax_and_bootstrap column
 tax_split <- tax %>%  separate(Taxonomy_clean, into = c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species"), sep = ";", fill = "right") # Split the Taxonomy_clean column to obtain ranks
 write.table(tax_split, "~/5-abundance_split.xlsx", col=NA, sep="\t",dec=".")
-#########################################
+```
 
-# Step 2. Grouping all the ASV of the same genus together to have a Genus-identification for each sample. To do it, we used the file 5-abundance_split_2.xlsx and used the following R script :
-#########################################
+**Step 2.** Group all the ASV of the same genus together to have a Genus-identification for each sample. To do it, we used the file `5-abundance_split_2.xlsx` and used the following R script :
+```
 #### R ####
 # library(dplyr)
 # library(readxl)
@@ -173,7 +181,9 @@ aggregated <- tax_table %>%
     across(all_of(numeric_cols), sum, na.rm = TRUE)
   )
 write.xlsx(aggregated, output_file) #export the new .xslx file
-#########################################
+```
 
-# Step3. Manually inspect the 5-abundance_aggregate.xlsx file obtained. Remove the column 1... if present and do the necessary changed to feat with the most appropriate file for statistic analyses (eg. sample in lines, Bacterial genera in columns).
-###############################################################################################################################################################################################################################################################################################
+**Step3.** Manually inspect the `5-abundance_aggregate.xlsx` file obtained. Remove the `column 1...` if present and do the necessary changed to feat with the most appropriate file for statistic analyses (eg. sample in lines, Bacterial genera in columns), etc. 
+
+Our two final files `8-Stinkbugs_microbiome.rdata` and `5-Stinkbugs-abundance.xlsx` were available in this GitHub page.
+
