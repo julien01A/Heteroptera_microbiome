@@ -111,6 +111,16 @@ Then, upload the cleaned TSV file `abundance_cleaned.tsv` and convert it back in
 The workflow then includes a post-processing step called `FROGS Affiliation postprocess`, which aggregates ASVs based on alignment metrics:
 ```
 #### Galaxy / FROGS Affiliation postprocess ####
+Sequence file: FROGS_4 Cluster filters: clusterFilters_sequences.fasta
+Abundance file: FROGS_5 Taxonomic affiliation: affiliation_abundance.biom
+Is this an amplicon hyper variable in length? No
+Minimum identity for aggregation: 99.0
+Minimum coverage for aggregation: 96.0
+```
+
+The workflow applies a secundary filtering step also called `FROGS_4 Cluster filters`:
+```
+#### Galaxy / FROGS_4 Cluster filters ####
 # Sequence file: FROGS Affiliation postprocess: sequences.fasta
 # Abundance file: FROGS Affiliation postprocess: affiliation_abundance.biom
 # Minimum prevalence method: all
