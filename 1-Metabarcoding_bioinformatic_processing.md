@@ -1,3 +1,5 @@
+# Bioinformatic processing and taxonomic assignment of 16S metabarcoding raw-read files
+
 All metabarcoding bioinformatic analyses were performed using a step-by-step workflow with the FROGS pipeline implemented on Galaxy.
 
 To begin, all demultiplexed raw-read files, available at `PASTE THE NCBI LINK`, were compiled in a single `ARCHIVE.tar` file.
