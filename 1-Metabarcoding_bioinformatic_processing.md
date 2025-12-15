@@ -141,6 +141,7 @@ Finally, to create one final microbiome data file `8-Stinkbugs_microbiome.rdata`
 ```
 
 Additionally, we created a secondary microbiome data file by grouping all bacteria-identified ASV species belonging to the same genus, in order to obtain a bacterial genus-level identification for each sample. This secondary microbiome data file was generated in three steps.
+
 **Step 1.** Create a file identifying each genus for each ASV. This file was called: `5-abundance_split_2.xlsx`, and was obtained from `abundance_cleaned.tsv` using the following R script:
 ```
 #### R ####
