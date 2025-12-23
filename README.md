@@ -232,3 +232,73 @@ Our two final files `8-Stinkbugs_microbiome.rdata` and `5-Stinkbugs-abundance.xl
 
 ## 2. Microbiome graphical representation and analyses
 
+The R scripts used to analyse and represent the microbiome of stinkbugs are available above.
+
+#### Heatmap of the 15 most abundant bacterial genera 
+
+Here, we aimed to represent the most abundant bacterial genera in terms of the relative number of reads per species. To define the relative number of reads for each sample, we first created a new column in the `5-Stinkbugs-abundance.xlsx` file called `Total_nb_reads`, corresponding to the sum of all bacterial reads for each sample. We then used this column to calculate the relative number of reads per sample for each bacterial genus. The script is as follows:
+
+```
+#### R ####
+# load the libraries
+library(tidyverse)
+library(pheatmap)
+# load the data file
+data <- read.delim("5-Stinkbugs-abundance.txt", header = TRUE, sep = "\t", check.names = FALSE)
+# Define columns of metadata 
+meta_cols <- c("sample_full_name", "sample", "species", "family","Total_nb_reads")
+bact_cols <- setdiff(colnames(data), meta_cols)
+# Relative proportion of reads by samples
+data_rel <- data %>%
+  mutate(across(all_of(bact_cols),~ .x / Total_nb_reads))
+# Find the top14 bacterial genera
+top14_genera <- data_rel %>%
+  summarise(across(all_of(bact_cols), sum, na.rm = TRUE)) %>%
+  pivot_longer(everything(), names_to = "genus", values_to = "abundance") %>%
+  arrange(desc(abundance)) %>%
+  slice_head(n = 14) %>%
+  pull(genus)
+# Create a column "other" for all the other genera
+data_rel <- data_rel %>%
+  mutate(Other = rowSums(across(setdiff(bact_cols, top14_genera))))
+# Select the Top14 and other columns
+microbiome_15 <- data_rel %>%
+  select(species, all_of(top14_genera), Other)
+#Agregate data by stinkbugs species
+microbiome_species <- microbiome_15 %>%
+  group_by(species) %>%
+  summarise(across(all_of(c(top14_genera, "Other")), mean, na.rm = TRUE))
+#Define a species order
+species_order <- c("Picromerus_bidens","Graphosoma_italicum","Graphosoma_semipunctatum","Eurydema_oleracea","Eurydema_ornata","Nezara_viridula","Acrosternum_hegeeri","Palomena_prasina","Carpocoris_sp","Dolycoris_baccarum","Rhaphigaster_nebulosa","Halyomorpha_halys","Pentatomid_sp","Pyrrhocoris_apterus","Scantius_aegyptius","Syromastus_rhombeus","Lygaeus_equestris")
+# Define the order of columns 
+col_order <- microbiome_species %>%
+  select(-species) %>%
+  summarise(across(everything(), sum, na.rm = TRUE)) %>%
+  pivot_longer(everything(), names_to = "genus", values_to = "abundance") %>%
+  arrange(desc(abundance)) %>%
+  pull(genus)
+col_order <- c(setdiff(col_order, "Other"), "Other")
+# Creation of the heatmap
+heatmap_matrix <- microbiome_species %>%
+  filter(species %in% species_order) %>%
+  mutate(species = factor(species, levels = species_order)) %>%
+  arrange(species) %>%
+  select(species, all_of(col_order)) %>%
+  column_to_rownames("species") %>%
+  as.matrix()
+#plot
+p <- pheatmap(
+  heatmap_matrix,
+  scale = "none",
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  color = colorRampPalette(c("#666666", "#FFCC00", "red"))(100),
+  fontsize_row = 10,
+  fontsize_col = 10,
+  border_color = NA,
+  angle_col = "90"
+)
+p
+```
+
+The raw figure generated in R is available on this GitHub page under the name `Stinkbugs_heatmap_raw_fig.png`. The figure was then manually post-processed for graphical adaptations.
