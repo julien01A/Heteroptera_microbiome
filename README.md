@@ -2,7 +2,7 @@
 
 ## 0. Quality controle of raw-read files
 
-All the raw-read sequencing files were first checked for their quality using three tools: FastQC (v.0.12.1) (DOI), Nanoplot (v.1.43.0) (DOI) and Nanocomp (v.1.23.1) (DOI).
+All the raw-read sequencing files were first checked for their quality using three tools: FastQC (v.0.12.1) (<https://www.bioinformatics.babraham.ac.uk/projects/fastqc/>), Nanoplot (v.1.43.0) (<https://github.com/wdecoster/NanoPlot>, <https://doi.org/10.1093/bioinformatics/btad311>) and Nanocomp (v.1.23.1) (<https://github.com/wdecoster/nanocomp>).
 
 For FastQC, we used:
 ```
