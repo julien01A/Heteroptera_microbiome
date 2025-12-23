@@ -287,17 +287,7 @@ heatmap_matrix <- microbiome_species %>%
   column_to_rownames("species") %>%
   as.matrix()
 #plot
-p <- pheatmap(
-  heatmap_matrix,
-  scale = "none",
-  cluster_rows = FALSE,
-  cluster_cols = FALSE,
-  color = colorRampPalette(c("#666666", "#FFCC00", "red"))(100),
-  fontsize_row = 10,
-  fontsize_col = 10,
-  border_color = NA,
-  angle_col = "90"
-)
+p <- pheatmap(heatmap_matrix, scale = "none", cluster_rows = FALSE, cluster_cols = FALSE, color = colorRampPalette(c("#666666", "#FFCC00", "red"))(100), fontsize_row = 10, fontsize_col = 10, border_color = NA, angle_col = "90")
 p
 ```
 
