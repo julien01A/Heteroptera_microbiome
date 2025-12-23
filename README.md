@@ -1,4 +1,4 @@
-# Stinkbugs_microbiome
+## **Stinkbugs microbiome**
 
 # 1. Bioinformatic processing and taxonomic assignment of 16S metabarcoding raw-read files
 
