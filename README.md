@@ -14,6 +14,7 @@ done
 
 Then, for Nanoplot:
 ```
+### bash ####
 mkdir -p Quality_reads
 for reads_file in *.fastq.gz; do
     reads_ech=$(basename "$reads_file" .fastq.gz)
@@ -23,6 +24,7 @@ done
 
 Finally, for NanoComp:
 ```
+### bash ####
 mkdir -p Quality_NanoComp_all_samples
 fastq_files=$(ls *.fastq.gz)
 NanoComp -t 2 --fastq $fastq_files -o Quality_NanoComp_all_samples
