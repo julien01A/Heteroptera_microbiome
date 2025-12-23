@@ -1,6 +1,34 @@
-## **Stinkbugs microbiome**
+# **Stinkbugs microbiome**
 
-# 1. Bioinformatic processing and taxonomic assignment of 16S metabarcoding raw-read files
+## 0. Quality controle of raw-read files
+
+All the raw-read sequencing files were first checked for their quality using three tools: FastQC (v.0.12.1) (DOI), Nanoplot (v.1.43.0) (DOI) and Nanocomp (v.1.23.1) (DOI).
+
+For FastQC, we used:
+```
+### bash ####
+for file in *.fastq; do
+    fastqc "$file"
+done
+```
+
+Then, for Nanoplot:
+```
+mkdir -p Quality_reads
+for reads_file in *.fastq.gz; do
+    reads_ech=$(basename "$reads_file" .fastq.gz)
+    NanoPlot -t 2 --fastq "$reads_file" -o "./Quality_reads/Quality_${reads_ech}" --N50
+done
+```
+
+Finally, for NanoComp:
+```
+mkdir -p Quality_NanoComp_all_samples
+fastq_files=$(ls *.fastq.gz)
+NanoComp -t 2 --fastq $fastq_files -o Quality_NanoComp_all_samples
+```
+
+## 1. Bioinformatic processing and taxonomic assignment of 16S metabarcoding raw-read files
 
 All metabarcoding bioinformatic analyses were performed using a step-by-step workflow with the FROGS pipeline implemented on Galaxy.
 
@@ -201,4 +229,6 @@ write.xlsx(aggregated, output_file) #export the new .xslx file
 **Step3.** Manually inspect the `5-abundance_aggregate.xlsx` file obtained. Remove the `column 1...` if present and do the necessary changed to feat with the most appropriate file for statistic analyses (eg. sample in lines, Bacterial genera in columns), etc. 
 
 Our two final files `8-Stinkbugs_microbiome.rdata` and `5-Stinkbugs-abundance.xlsx` were available in this GitHub page.
+
+## 2. Microbiome graphical representation and analyses
 
