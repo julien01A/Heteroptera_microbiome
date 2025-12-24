@@ -236,7 +236,7 @@ Our two final files `8-Stinkbugs_microbiome.rdata` and `5-Stinkbugs-abundance.xl
 
 The R scripts used to analyse and represent the microbiome of stinkbugs are available above.
 
-#### Heatmap of the 15 most abundant bacterial genera 
+### **Heatmap of the 15 most abundant bacterial genera **
 
 Here, we aimed to represent the most abundant bacterial genera in terms of the relative number of reads per species. To define the relative number of reads for each sample, we first created a new column in the `5-Stinkbugs-abundance.xlsx` file called `Total_nb_reads`, corresponding to the sum of all bacterial reads for each sample. We then used this column to calculate the relative number of reads per sample for each bacterial genus. The script is as follows:
 
@@ -295,7 +295,7 @@ p
 
 The raw figure generated in R is available on this GitHub page under the name `Stinkbugs_heatmap_raw_fig.png`. The figure was then manually post-processed for graphical adaptations.
 
-#### Composition plot of microbiome by samples
+### **Composition plot of microbiome by samples**
 
 Here, we aimed to represent the most abundant bacterial genera in terms of relative abundance (%) per samples. The script is as follows:
 
