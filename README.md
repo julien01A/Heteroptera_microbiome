@@ -450,7 +450,7 @@ The raw figure generated in R is available on this GitHub page under the name `S
 
 ### **PCoA**
 
-Here, we calculated the Bray-Curtis distance as a proxy of beta diversity. The Bray-Curtis distance is a measure of dissimilarity between two samples based on the relative abundances of species, ranging from 0 (identical) to 1 (completely different). We then performed a PCoA on this distance matrix, which allows us to reduce the complex multivariate relationships into a few axes that capture the main patterns of variation between samples, making it easier to visualize similarities and differences in microbiome composition. The script is as follows:
+Here, we calculated the Bray-Curtis distance as a proxy of beta diversity. The Bray-Curtis distance is a measure of dissimilarity between two samples based on the relative abundances of bacterial genera, ranging from 0 (identical) to 1 (completely different). We then performed a PCoA on this distance matrix, which allows us to reduce the complex multivariate relationships into a few axes that capture the main patterns of variation between samples, making it easier to visualize similarities and differences in microbiome composition. The script is as follows:
 
 ```
 #### R ####
