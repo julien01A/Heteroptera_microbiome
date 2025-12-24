@@ -515,3 +515,23 @@ ggplot(scores_pcoa, aes(x = PCoA1, y = PCoA2, color = species, shape = family)) 
 ```
 
 The raw figure generated in R is available on this GitHub page under the name `Stinkbugs_PCoA_raw_fig.png`.
+
+### **Phylosymbiosis**
+
+To assess whether a phylosymbiosis pattern structures the microbiome of stink bugs, we first constructed a phylogeny of the stink bugs. To do this, we collected COI sequences from 15 species, aligned them using Clustal Omega (v.1.2.2) (<https://doi.org/10.1002/pro.3290>) implemented in the Unipro UGENE software (v.52.0) (<https://ugene.net/>, <https://doi.org/10.1093/bioinformatics/bts091>), and obtained a final alignment of 631 bp by removing gaps '-' and undetermined positions 'N'. This alignment file has been deposited in this GitHub repository under the name `coi_alignment.fa`.
+
+Then, for each ALIGNMENT.faa files, substitution models were evaluated using modeltest (v.0.1.7) (<https://doi.org/10.1093/molbev/msz189>) to determine the most appropriate ML substitution model (based on the AICc criterion):
+
+```
+#### bash ####
+modeltest-ng -i coi_alignment.fa -p 12 -T raxml -d nt
+```
+
+We obtained `GTR+I+G4` as the most appropriate ML model. We then constructed the phylogenetic tree using raxml-ng (v.1.1.0) (<https://doi.org/10.1093/bioinformatics/btz305>):
+```
+#### bash ####
+raxml-ng --all --msa coi_alignment.fa --model GTR+I+G4 --prefix stinkbugs_coi-raxmlng --seed 5 --threads 20 --bs-trees 1000
+raxml-ng --support --tree stinkbugs_coi-raxmlng.raxml.bestTree --bs-trees 1000 --prefix stinkbugs_coi-boot --threads 20
+```
+
+Once the run was completed, we used FigTree (v.1.4.4) (<https://github.com/rambaut/figtree/releases>) to convert the `stinkbugs_coi-raxmlng.raxml.support` file into a usable Newick (.nwk) format. The resulting file, `stinkbugs_coi.nwk`, has been deposited in the GitHub repository.
