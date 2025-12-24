@@ -294,3 +294,87 @@ p
 ```
 
 The raw figure generated in R is available on this GitHub page under the name `Stinkbugs_heatmap_raw_fig.png`. The figure was then manually post-processed for graphical adaptations.
+
+#### Composition plot of microbiome by samples
+
+Here, we aimed to represent the most abundant bacterial genera in terms of relative abundance (%) per samples. The script is as follows:
+
+```
+#### R ####
+# load the libraries
+library(tidyverse)
+library(ggplot2)
+library(RColorBrewer)
+# load the data file
+data <- read.delim("5-Stinkbugs-abundance.txt", header = TRUE, sep = "\t", check.names = FALSE)
+meta_cols <- c("sample_full_name", "sample", "samplebis", "species", "family", "Total_nb_reads")
+bact_cols <- setdiff(colnames(data), meta_cols)
+# Relative proportion of reads by samples
+data_rel <- data %>%
+  mutate(across(all_of(bact_cols), ~ .x / Total_nb_reads))
+# Find the top20 bacterial genera
+top20_genera <- data_rel %>%
+  summarise(across(all_of(bact_cols), sum, na.rm = TRUE)) %>%
+  pivot_longer(everything(), names_to = "genus", values_to = "abundance") %>%
+  arrange(desc(abundance)) %>%
+  slice_head(n = 20) %>%
+  pull(genus)
+# Create a column "other" for all the other genera
+data_rel <- data_rel %>%
+  mutate(
+    Other = rowSums(across(setdiff(bact_cols, top20_genera)))
+  )
+# Select the Top20 and other columns
+composition_df <- data_rel %>%
+  select(sample, species, all_of(top20_genera), Other)
+
+# Reshape to long format (required for ggplot)
+composition_long <- composition_df %>%
+  pivot_longer(
+    cols = c(all_of(top20_genera), Other),
+    names_to = "genus",
+    values_to = "relative_abundance"
+  ) %>%
+  mutate(relative_abundance = relative_abundance * 100)  # %
+
+# Define species order
+species_order <- c("Picromerus_bidens","Graphosoma_italicum","Graphosoma_semipunctatum","Eurydema_oleracea","Eurydema_ornata","Nezara_viridula","Acrosternum_hegeeri",
+  "Palomena_prasina","Carpocoris_sp","Dolycoris_baccarum","Rhaphigaster_nebulosa","Halyomorpha_halys","Pentatomid_sp","Pyrrhocoris_apterus","Scantius_aegyptius",
+  "Syromastus_rhombeus","Lygaeus_equestris")
+sample_order <- composition_long %>%
+  distinct(sample, species) %>%
+  mutate(species = factor(species, levels = rev(species_order))) %>%
+  arrange(species, sample) %>%
+  pull(sample)
+composition_long <- composition_long %>%
+  mutate(
+    sample = factor(sample, levels = sample_order),
+    genus  = factor(genus, levels = c(setdiff(top20_genera, "Other"), "Other"))  )
+
+#Set colors
+n_genus <- length(levels(composition_long$genus))
+palette_genus <- c("#b2df8a", "#d95f02", "#7570b3", "#e7298a","#66a61e", "#e6ab02", "#a6761d", "aquamarine","#1f78b4", "#1b9e77", "#fb9a99", "#fdbf6f","#cab2d6", "azure4", "#b15928","#8dd3c7", "#ffffb3", "yellow2","azure2", "#80b1d3", "chocolate4")[1:n_genus]
+names(palette_genus) <- levels(composition_long$genus)
+palette_genus["Other"] <- "black"
+
+#composition plot
+ggplot(composition_long, aes(x = relative_abundance, y = sample, fill = genus)) +
+  geom_col(
+    width = 0.8,
+    position = position_stack(reverse = TRUE)
+  ) +
+  scale_fill_manual(values = palette_genus) +
+  scale_x_continuous(expand = c(0, 0)) +
+  theme_minimal(base_size = 12) +
+  theme(
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor = element_blank()
+  ) +
+  labs(
+    x = "Relative abundance (%)",
+    y = "Sample",
+    fill = "Bacterial genus",
+    title = "Microbiome composition of stinkbug samples"
+  )
+```
+The raw figure generated in R is available on this GitHub page under the name `Stinkbugs_compositionplot_raw_fig.png`.
