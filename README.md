@@ -381,7 +381,7 @@ The raw figure generated in R is available on this GitHub page under the name `S
 
 ### **Chao1 index by samples**
 
-Here, we estimtaed the Chao1 index for each sample as a proxy of alpha diversity. The Chao1 index is an estimate of the total bacterial genus richness in a sample, accounting for rare or unobserved genera to better approximate the actual number of bacterial genera present. The script is as follows:
+Here, we estimated the Chao1 index for each sample as a proxy of alpha diversity. The Chao1 index is an estimate of the total bacterial genus richness in a sample, accounting for rare or unobserved genera to better approximate the actual number of bacterial genera present. The script is as follows:
 
 ```
 #### R ####
@@ -448,3 +448,70 @@ ggplot(alpha_div, aes(y = sample, x = Chao1)) +
 
 The raw figure generated in R is available on this GitHub page under the name `Stinkbugs_chao1_raw_fig.png`.
 
+### **PCoA**
+
+Here, we calculated the Bray-Curtis distance as a proxy of beta diversity. The Bray-Curtis distance is a measure of dissimilarity between two samples based on the relative abundances of species, ranging from 0 (identical) to 1 (completely different). We then performed a PCoA on this distance matrix, which allows us to reduce the complex multivariate relationships into a few axes that capture the main patterns of variation between samples, making it easier to visualize similarities and differences in microbiome composition. The script is as follows:
+
+```
+#### R ####
+# load the libraries
+library(tidyverse)
+library(vegan)
+library(ggplot2)
+# load the data file
+data <- read.delim("5-Stinkbugs-abundance.txt", header = TRUE, sep = "\t", check.names = FALSE)
+# Define columns of metadata 
+meta_cols <- c("sample_full_name", "sample", "samplebis", "species", "family", "Total_nb_reads")
+bact_cols <- setdiff(colnames(data), meta_cols)
+# Create the abundance matrix by normalizing
+data$sample <- make.unique(as.character(data$sample))
+data_rel <- data %>%
+  mutate(across(all_of(bact_cols), ~ .x / Total_nb_reads)) %>%
+  column_to_rownames("sample")
+abundance_matrix <- as.matrix(data_rel[, bact_cols])
+# Calculate the Bray-Curtis index
+bray_dist <- vegdist(abundance_matrix, method = "bray")
+# PCoA
+pcoa_res <- cmdscale(bray_dist, k = 2, eig = TRUE)
+# Extract the coordinates and add metadata
+scores_pcoa <- as.data.frame(pcoa_res$points)
+colnames(scores_pcoa) <- c("PCoA1", "PCoA2")
+scores_pcoa$sample <- rownames(scores_pcoa)
+scores_pcoa <- scores_pcoa %>%
+  left_join(data %>% select(sample, species), by = "sample")
+# Add the metadata column "family"
+scores_pcoa <- scores_pcoa %>%
+  left_join(data %>% select(sample, family), by = "sample") %>%
+  mutate(family = factor(family))
+
+# Calculate the proportion of axe1 and axe2
+eig <- pcoa_res$eig
+prop_var <- eig / sum(eig)
+prop_var_PC1 <- round(prop_var[1] * 100, 1)
+prop_var_PC2 <- round(prop_var[2] * 100, 1)
+
+# Define color palette for species and shapes for family
+palette_species <- c("Picromerus_bidens" = "#1f78b4","Graphosoma_italicum" = "#33a02c","Graphosoma_semipunctatum" = "#e31a1c","Eurydema_oleracea" = "#ff7f00",
+ "Eurydema_ornata" = "#6a3d9a", "Nezara_viridula" = "#b15928","Acrosternum_hegeeri" = "#a6cee3","Palomena_prasina" = "#b2df8a","Carpocoris_sp" = "yellow2",
+ "Dolycoris_baccarum" = "#fdbf6f","Rhaphigaster_nebulosa" = "#cab2d6","Halyomorpha_halys" = "black","Pentatomid_sp" = "#8dd3c7","Pyrrhocoris_apterus" = "#80b1d3",
+ "Scantius_aegyptius" = "pink2","Syromastus_rhombeus" = "#d9d9d9","Lygaeus_equestris" = "#bc80bd")
+shapes_family <- c("Pentatomidea" = 15,"Lygaeidae" = 18,"Coreidae" = 17,"Pyrrhocoridae"= 19)
+
+# PCoA plot
+ggplot(scores_pcoa, aes(x = PCoA1, y = PCoA2, color = species, shape = family)) +
+  geom_hline(yintercept = 0, linetype = 2, color = "grey", size = 0.2) +
+  geom_vline(xintercept = 0, linetype = 2, color = "grey", size = 0.2) +
+  geom_point(size = 7, alpha = 0.9) +
+  scale_color_manual(values = palette_species) +
+  scale_shape_manual(values = shapes_family) +
+  stat_ellipse(aes(group = family), type = "t", linetype = 1, color = "black", alpha = 0.5, size = 0.4) +
+  theme_minimal(base_size = 14) +
+  labs(
+    x = paste0("PCoA1 (", prop_var_PC1, "%)"),
+    y = paste0("PCoA2 (", prop_var_PC2, "%)"),
+    color = "Species",
+    shape = "Family") +
+  theme(panel.grid = element_blank(),legend.position = "right")
+```
+
+The raw figure generated in R is available on this GitHub page under the name `Stinkbugs_PCoA_raw_fig.png`.
