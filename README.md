@@ -378,3 +378,73 @@ ggplot(composition_long, aes(x = relative_abundance, y = sample, fill = genus)) 
   )
 ```
 The raw figure generated in R is available on this GitHub page under the name `Stinkbugs_compositionplot_raw_fig.png`.
+
+### **Chao1 index by samples**
+
+Here, we estimtaed the Chao1 index for each sample as a proxy of alpha diversity. The Chao1 index is an estimate of the total bacterial genus richness in a sample, accounting for rare or unobserved genera to better approximate the actual number of bacterial genera present. The script is as follows:
+
+```
+#### R ####
+# load the libraries
+library(tidyverse)
+library(dplyr)
+library(vegan)
+library(ggplot2)
+# load the data file
+data <- read.delim("5-Stinkbugs-abundance.txt", header = TRUE, sep = "\t", check.names = FALSE)
+# Define columns of metadata 
+meta_cols <- c("sample_full_name", "sample", "samplebis", "species","family", "Total_nb_reads")
+bact_cols <- setdiff(colnames(data), meta_cols)
+# Calculate Chao1 for each sample
+abundance_matrix <- data %>%
+  select(sample, all_of(bact_cols)) %>%
+  column_to_rownames("sample") %>%
+  as.matrix()
+chao1 <- estimateR(abundance_matrix)
+# Put Chao1 indexes in a dataframe and add it to the metadata
+alpha_div <- data.frame(
+  sample = colnames(chao1),
+  Chao1  = as.numeric(chao1["S.chao1", ]))
+alpha_div <- alpha_div %>%
+  left_join(
+    data %>%
+      select(sample, species, family) %>%
+      distinct(),by = "sample")
+# order by samples
+sample_order <- c("42_Picromerus_bidens","33_Graphosoma_italicum","32_Graphosoma_italicum","31_Graphosoma_italicum","30_Graphosoma_italicum",
+  "29_Graphosoma_italicum","28_Graphosoma_italicum","27_Graphosoma_italicum","26_Graphosoma_italicum","21_Graphosoma_semipunctatum",
+  "20_Graphosoma_semipunctatum","8_Eurydema_oleracea","7_Eurydema_ornata","6_Eurydema_ornata","5_Eurydema_ornata","25_Nezara_viridula",
+  "24_Nezara_viridula","23_Nezara_viridula","4_Acrosternum_hegeeri","22_Palomena_prasina","3_Carpocoris_sp","2_Carpocoris_sp","1_Carpocoris_sp",
+  "9_Dolycoris_baccarum","43_Dolycoris_baccarum","11_Dolycoris_baccarum","10_Dolycoris_baccarum","45_Rhaphigaster_nebulosa","36_Halyomorpha_halys",
+  "35_Halyomorpha_halys","34_Halyomorpha_halys","44_Pentatomid_sp","19_Pyrrhocoris_apterus","18_Pyrrhocoris_apterus","17_Pyrrhocoris_apterus",
+  "16_Pyrrhocoris_apterus","14_Scantius_aegyptius","13_Scantius_aegyptius","12_Scantius_aegyptius","15_Syromastus_rhombeus","41_Lygaeus_equestris",
+  "40_Lygaeus_equestris","39_Lygaeus_equestris","38_Lygaeus_equestris","37_Lygaeus_equestris")
+sample_order <- composition_long %>%
+  distinct(sample, species) %>%
+  mutate(species = factor(species, levels = rev(species_order))) %>%
+  arrange(species, sample) %>%
+  pull(sample)
+alpha_div <- alpha_div %>%
+  mutate(sample = factor(sample, levels = sample_order)) %>%
+  arrange(sample)
+
+# connect each dots in the plot
+segments_df <- alpha_div %>%
+  mutate(
+    sample_next = lead(sample),
+    Chao1_next = lead(Chao1)
+  ) %>%
+  filter(!is.na(sample_next))
+#plot
+ggplot(alpha_div, aes(y = sample, x = Chao1)) +
+  geom_segment(data = segments_df, aes(x = Chao1, xend = Chao1_next, y = sample, yend = sample_next), color = "black") +
+  geom_point(size = 3, color = "black") +
+  scale_x_continuous(breaks = seq(0, 150, by = 10),labels = c("0", "", "", "", "", "50", "", "", "", "", "100", "", "", "", "", "150"), limits = c(0, 150)) +
+  geom_segment(aes(x = 0, xend = 150, y = -0.5, yend = -0.5), color = "black", size = 1) +
+  theme_minimal(base_size = 12) +
+  theme(axis.line.x = element_blank(), axis.ticks.x = element_line(color = "black"), panel.grid.major.y = element_blank(),panel.grid.minor = element_blank()) +
+  labs(y = "Sample", x = "Chao1 index")
+```
+
+The raw figure generated in R is available on this GitHub page under the name `Stinkbugs_chao1_raw_fig.png`.
+
