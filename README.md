@@ -514,24 +514,46 @@ ggplot(scores_pcoa, aes(x = PCoA1, y = PCoA2, color = species, shape = family)) 
   theme(panel.grid = element_blank(),legend.position = "right")
 ```
 
-The raw figure generated in R is available on this GitHub page under the name `Stinkbugs_PCoA_raw_fig.png`.
+The raw figures generated in R are available on this GitHub page under the names `Stinkbugs_PCoA_raw_fig_BRAY.png` and `Stinkbugs_PCoA_raw_fig_JACCARD.png`.
 
 ### **Phylosymbiosis**
 
-To assess whether a phylosymbiosis pattern structures the microbiome of stink bugs, we first constructed a phylogeny of the stink bugs. To do this, we collected COI sequences from 15 species, aligned them using Clustal Omega (v.1.2.2) (<https://doi.org/10.1002/pro.3290>) implemented in the Unipro UGENE software (v.52.0) (<https://ugene.net/>, <https://doi.org/10.1093/bioinformatics/bts091>), and obtained a final alignment of 631 bp by removing gaps '-' and undetermined positions 'N'. This alignment file has been deposited in this GitHub repository under the name `coi_alignment.fa`.
+To assess whether a phylosymbiosis pattern structures the microbiome of stinkbugs, we first constructed a distance matrix for the stinkug species. To do this, we collected COI sequences from 15 species (see the supplementary table online), aligned them using Clustal Omega (v.1.2.2) (<https://doi.org/10.1002/pro.3290>) implemented in the Unipro UGENE software (v.52.0) (<https://ugene.net/>, <https://doi.org/10.1093/bioinformatics/bts091>), and obtained a final alignment of 211 amino acids by removing gaps '-'. The COI sequences have been deposited in this GitHub repository under the name `coi_aa.fasta`. Using UGENE, we calculated a multiple sequence alignment distance matrix (in %) based on Hamming dissimilarity. This matrix is available as `matrix_aa_distance.txt`.
 
-Then, for each ALIGNMENT.faa files, substitution models were evaluated using modeltest (v.0.1.7) (<https://doi.org/10.1093/molbev/msz189>) to determine the most appropriate ML substitution model (based on the AICc criterion):
+We then selected 15 representative specimens to compare their microbiota with the phylogenetic alignment, i.e., the multiple sequence alignment distance matrix. One specimen per species was chosen; for species with multiple specimens, we selected the individual with the highest Chao1 index. The microbiota matrix used was `abundance_phylosymbiosis.txt`, also deposited in the GitHub repository. Bray–Curtis and Jaccard distances were used to quantify microbiota dissimilarities. Finally, a Mantel test (spearman's correlation, 9,999 permutations) was performed to statistically estimate the correlation between the phylogenetic distance matrix and the microbiota dissimilarity matrix. The script used is as follows:
 
 ```
-#### bash ####
-modeltest-ng -i coi_alignment.fa -p 12 -T raxml -d nt
+#### R ####
+# load the libraries
+library(vegan)
+library(ggplot2)
+# Load the matrix of phylogenetic distance
+host_dist <- read.table("matrix_aa_distance.txt", header = TRUE, row.names = 1, sep = "\t", dec = ",", check.names = FALSE)
+host_dist <- as.dist(host_dist)
+# Load the representative microbiome matrix
+microbiome <- read.table("abundance_phylosymbiosis.txt", header = TRUE, sep = "\t", check.names = FALSE)
+rownames(microbiome) <- microbiome$name
+microbiome <- microbiome[, colnames(microbiome) != "" & !is.na(colnames(microbiome))]
+microbiome_mat <- microbiome %>%
+  select(-(name:family))
+#Bray
+micro_dist <- vegdist(microbiome_mat, method = "bray") # change here with "jaccard" distance
+#Mantel
+common_taxa <- intersect(labels(host_dist), labels(micro_dist))
+ost_dist <- as.dist(as.matrix(host_dist)[common_taxa, common_taxa])
+micro_dist <- as.dist(as.matrix(micro_dist)[common_taxa, common_taxa])
+mantel_res <- mantel(host_dist,  micro_dist, method = "spearman", permutations = 9999)
+mantel_res
+# plot
+mantel_df <- data.frame(
+  Host = as.vector(host_dist),
+  Microbiome = as.vector(micro_dist)
+)
+p_mantel <- ggplot(mantel_df, aes(x = Host, y = Microbiome)) + geom_point(size = 5, alpha = 0.6) + geom_smooth(method = "lm", se = TRUE, color="black",fill="grey70") + labs(x = "Phylogenetic distance of stinkbug species", y = "Microbiome dissimilarity (Bray)") + theme_classic(base_size = 12)
+p_mantel
 ```
 
-We obtained `GTR+I+G4` as the most appropriate ML model. We then constructed the phylogenetic tree using raxml-ng (v.1.1.0) (<https://doi.org/10.1093/bioinformatics/btz305>):
-```
-#### bash ####
-raxml-ng --all --msa coi_alignment.fa --model GTR+I+G4 --prefix stinkbugs_coi-raxmlng --seed 5 --threads 20 --bs-trees 1000
-raxml-ng --support --tree stinkbugs_coi-raxmlng.raxml.bestTree --bs-trees 1000 --prefix stinkbugs_coi-boot --threads 20
-```
+The raw figures generated in R are available on this GitHub page under the names `mantel_raw_fig_BRAY.png` and `mantel_raw_fig_JACCARD.png`.
 
-Once the run was completed, we used FigTree (v.1.4.4) (<https://github.com/rambaut/figtree/releases>) to convert the `stinkbugs_coi-raxmlng.raxml.support` file into a usable Newick (.nwk) format. The resulting file, `stinkbugs_coi.nwk`, has been deposited in the GitHub repository.
+
+
