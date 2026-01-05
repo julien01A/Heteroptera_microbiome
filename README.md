@@ -540,7 +540,7 @@ microbiome_mat <- microbiome %>%
 micro_dist <- vegdist(microbiome_mat, method = "bray") # change here with "jaccard" distance
 #Mantel
 common_taxa <- intersect(labels(host_dist), labels(micro_dist))
-ost_dist <- as.dist(as.matrix(host_dist)[common_taxa, common_taxa])
+host_dist <- as.dist(as.matrix(host_dist)[common_taxa, common_taxa])
 micro_dist <- as.dist(as.matrix(micro_dist)[common_taxa, common_taxa])
 mantel_res <- mantel(host_dist,  micro_dist, method = "spearman", permutations = 9999)
 mantel_res
