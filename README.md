@@ -602,7 +602,7 @@ threshold <- 0.8
 GI_cor[abs(GI_cor) < threshold] <- 0
 LE_cor[abs(LE_cor) < threshold] <- 0
 #####################################################
-# Preparation to construct the figs
+# Preparation to construct the plots
 #####################################################
 build_graph <- function(cor_mat) {
   graph_from_adjacency_matrix(
