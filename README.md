@@ -555,5 +555,219 @@ p_mantel
 
 The raw figures generated in R are available on this GitHub page under the names `mantel_raw_fig_BRAY.png` and `mantel_raw_fig_JACCARD.png`.
 
+### **Network-based analysis of bacterial co-occurrence patterns**
 
+The objective of this analysis is to characterize and compare the structure of bacterial co-occurrence networks associated with two insect host species, Graphosoma italicum and Lygaeus equestris. By constructing correlation-based networks from microbiota abundance data, this approach aims to: (i) identify patterns of association (positive and negative) between bacterial taxa, (ii) highlight highly connected taxa (network hubs) that may play a key ecological role within each host-associated microbiome, and (iii) compare the topology and key bacterial taxa between the two host species. 
 
+To reduce noise and spurious correlations driven by rare taxa, bacterial genera are filtered based on prevalence with only taxa present in at least 33% of the samples within a given host species retained. Because microbiota data are compositional by nature, a centered log-ratio (CLR) transformation is applied after adding a pseudo-count to handle zeros. This transformation expresses each taxon relative to the geometric mean abundance of all taxa within a sample, thereby reducing spurious correlations and allowing meaningful correlation-based network inference. Then, for each host species, a taxon × taxon Spearman correlation matrix is computed using CLR-transformed data. To focus on biologically meaningful associations, only strong correlations are retained (|ρ|≥0.8). The filtered correlation matrices are converted into undirected weighted graphs, where nodes represent bacterial taxa and edges represent strong positive or negative associations. Isolated nodes (taxa with no remaining associations) are removed, ensuring that the final networks represent interacting bacterial communities. For each network, several node-level properties are computed and used for visualization (eg. degree, node size, etc.). Full co-occurrence networks are visualized for each host species, with edge color indicating the sign of the association (positive vs. negative) and node size reflecting connectivity. The raw figures generated in R are available on this GitHub page under the names `Network_full_with_labels_prevalence.png` and `Network_full_simplified.png`. Subnetworks composed of the top 20 most connected taxa (highest degree) were then extracted for each host species. The raw figure generated was saved under the names `Network_top20_with_labels.png`. Finally, bacterial taxa are ranked according to two complementary metrics: (i) Degree (= identifying highly connected taxa, called structural hubs), (ii) Strength (= sum of absolute edge weights, identifying taxa involved in strong associations). For each host species, the top-ranked taxa are extracted and reported, providing a concise list of candidates for further ecological or functional investigation.
+
+The script used is as follows:
+
+```
+#### R ####
+# load the libraries
+library(tidyverse)
+library(compositions)
+library(igraph)
+# load the data file
+data <- read.delim("5-Stinkbugs-abundance.txt", header = TRUE, sep = "\t", check.names = FALSE)
+# Select the two species G. italicum and L. equestris
+data_filt <- data %>%
+  filter(species %in% c("Graphosoma_italicum", "Lygaeus_equestris"))
+# Define columns of metadata and microbiota
+meta_cols <- c("sample_full_name", "sample", "samplebis", "species", "family", "Total_nb_reads")
+bact_cols <- setdiff(colnames(data_filt), meta_cols)
+# create a subdatafile per species
+GI <- data_filt %>% filter(species == "Graphosoma_italicum") %>% select(all_of(bact_cols))
+LE <- data_filt %>% filter(species == "Lygaeus_equestris") %>% select(all_of(bact_cols))
+# transform the sudtafiles in presence/absence matrices and filter the subdatafiles to remove rare genera by only keeping thoses presents in 33% of the samples
+filter_taxa <- function(mat, prevalence = 0.33) {
+  keep <- colMeans(mat > 0) >= prevalence
+  mat[, keep]
+}
+GI_f <- filter_taxa(GI, prevalence = 0.33)
+LE_f <- filter_taxa(LE, prevalence = 0.33)
+# transformation CLR (Centered Log-Ratio)
+clr_transform <- function(mat) {
+  mat <- mat + 1  # pseudo-count
+  clr(mat)
+}
+GI_clr <- clr_transform(GI_f)
+LE_clr <- clr_transform(LE_f)
+# Create a correlation matrix taxon × taxon with Spearman
+GI_cor <- cor(GI_clr, method = "spearman")
+LE_cor <- cor(LE_clr, method = "spearman")
+# only keep strong correlation |ρ| ≥ 0.8
+threshold <- 0.8
+GI_cor[abs(GI_cor) < threshold] <- 0
+LE_cor[abs(LE_cor) < threshold] <- 0
+#####################################################
+# Preparation to construct the figs
+#####################################################
+build_graph <- function(cor_mat) {
+  graph_from_adjacency_matrix(
+    cor_mat,
+    mode = "undirected",
+    weighted = TRUE,
+    diag = FALSE
+  )
+}
+g_GI <- build_graph(GI_cor)
+g_LE <- build_graph(LE_cor)
+# remove isolated nodes without connexions
+g_GI <- delete_vertices(g_GI, degree(g_GI) < 1)
+g_LE <- delete_vertices(g_LE, degree(g_LE) < 1)
+# Estimate the number of degree (connexions) of each node (bacterial taxa)
+V(g_GI)$degree <- degree(g_GI) 
+V(g_LE)$degree <- degree(g_LE)
+# Scale normalization of the node's lenght according to the nb of degree
+scale_size <- function(x, min = 6, max = 20) { # 
+  (x - min(x)) / (max(x) - min(x)) * (max - min) + min
+} 
+V(g_GI)$size <- scale_size(V(g_GI)$degree)
+V(g_LE)$size <- scale_size(V(g_LE)$degree)
+### Facultative : Color the node according to bacterial prevalences
+# Estimate the prevalence of each bacteria in the sample
+GI_prev <- colSums(GI_f > 0) 
+LE_prev <- colSums(LE_f > 0)
+# Attribute each prevalence to each node
+V(g_GI)$prevalence <- GI_prev[V(g_GI)$name] 
+V(g_LE)$prevalence <- LE_prev[V(g_LE)$name]
+# Set the color of the node proportional to the prevalence
+pal <- colorRampPalette(c("white", "steelblue")) 
+add_alpha <- function(col, alpha = 0.7) {
+  adjustcolor(col, alpha.f = alpha)
+}
+V(g_GI)$color <- add_alpha(
+  pal(100)[cut(V(g_GI)$prevalence, breaks = 100)],
+  alpha = 0.7
+)
+V(g_LE)$color <- add_alpha(
+  pal(100)[cut(V(g_LE)$prevalence, breaks = 100)],
+  alpha = 0.7
+)
+# Create the fig's legend. Example of G.italicum
+deg_GI <- sort(unique(V(g_GI)$degree))
+prev_GI <- sort(unique(V(g_GI)$prevalence))
+deg_legend_GI <- round(c(min(deg_GI),
+                         median(deg_GI),
+                         max(deg_GI)))
+prev_legend_GI <- round(c(min(prev_GI),
+                          median(prev_GI),
+                          max(prev_GI)))
+size_legend_GI <- scale_size(deg_legend_GI,
+                             min = min(V(g_GI)$size),
+                             max = max(V(g_GI)$size))
+pal <- colorRampPalette(c("white", "steelblue"))
+col_legend_GI <- add_alpha(
+  pal(100)[cut(prev_legend_GI, breaks = 100)],
+  alpha = 0.7
+)
+#####################################################
+# Plots #
+#####################################################
+# Full network G.italicum & L.equestris with node's color depending on prevalence
+plot_network <- function(g, title) {
+  E(g)$color <- ifelse(E(g)$weight > 0, "firebrick", "steelblue")
+  E(g)$width <- abs(E(g)$weight) * 4
+  V(g)$label <- ifelse(V(g)$degree >= quantile(V(g)$degree, 0.8), V(g)$name, NA)
+  plot(g, vertex.size = V(g)$size, vertex.color = V(g)$color, vertex.frame.color = "black",
+       vertex.label = V(g)$name, vertex.label.color = "black", vertex.label.family = "Arial",
+       vertex.label.cex = 0.7, main = title)
+  legend("topleft", 
+         legend = c("Positive association","Negative association",
+                    paste("Degree =", deg_legend_GI), paste("Prevalence =", prev_legend_GI)),
+         col = c("firebrick", "steelblue", rep("black", 3), rep("black", 3)),
+         lwd = c(2, 2, rep(NA, 6)),
+         pch = c(NA, NA, rep(21, 3), rep(21, 3)),
+         pt.cex = c(NA, NA, size_legend_GI / max(V(g_GI)$size) * 3, rep(2, 3)),
+         pt.bg = c(NA, NA, rep("grey80", 3), col_legend_GI),
+         bty = "n",
+         cex = 0.8)
+}
+par(mfrow = c(1,2))
+plot_network(g_GI, "Graphosoma italicum")
+plot_network(g_LE, "Lygaeus equestris")
+
+# Simplified full network G.italicum & L.equestris without labels and without node's color depending on prevalence
+plot_network_suppl <- function(g, title) {
+  E(g)$color <- ifelse(E(g)$weight > 0, "firebrick", "steelblue")
+  E(g)$width <- abs(E(g)$weight) * 4
+  V(g)$size <- scale_size(V(g)$degree)
+  V(g)$color <- "grey20"
+  V(g)$label <- NA
+  plot(g, vertex.size = V(g)$size, vertex.color = V(g)$color, vertex.frame.color = "black", 
+       vertex.label = V(g)$label, vertex.label.color = "black", vertex.label.family = "Arial",
+       vertex.label.cex = 0.7, main = title)
+  legend("topleft",
+         legend = c("Positive association", "Negative association", paste("Degree =", deg_legend_GI)),
+         col = c("firebrick", "steelblue", rep("black", 3), rep("black", 3)),
+         lwd = c(2, 2, rep(NA, 6)),
+         pch = c(NA, NA, rep(21, 3), rep(21, 3)),
+         pt.cex = c(NA, NA, size_legend_GI / max(V(g_GI)$size) * 3, rep(2, 3)),
+         pt.bg = c(NA, NA, rep("grey80", 3), col_legend_GI),
+         bty = "n",
+         cex = 0.8)
+}
+par(mfrow = c(1,2))
+plot_network_suppl(g_GI, "Graphosoma italicum")
+plot_network_suppl(g_LE, "Lygaeus equestris")
+
+# Simplified network of only the top 20 most connected bacterial taxa
+# extraction of the top 20 most connected taxa
+keep_GI <- names(sort(degree(g_GI), decreasing = TRUE))[1:20]
+g_GI_sub <- induced_subgraph(g_GI, vids = keep_GI)
+keep_LE <- names(sort(degree(g_LE), decreasing = TRUE))[1:20]
+g_LE_sub <- induced_subgraph(g_LE, vids = keep_LE)
+# plot
+plot_subnetwork <- function(g_sub, title) {
+  E(g_sub)$color <- ifelse(E(g_sub)$weight > 0, "firebrick", "steelblue")
+  E(g_sub)$width <- abs(E(g_sub)$weight) * 4
+  V(g_sub)$size <- scale_size(V(g_sub)$degree, min = 15, max = 40)
+  pal <- colorRampPalette(c("grey10", "grey10"))
+  V(g_sub)$color <- add_alpha(pal(100)[cut(V(g_sub)$prevalence, breaks = 100)], alpha = 0.8)
+  V(g_sub)$label <- V(g_sub)$name
+  plot(g_sub,
+       vertex.size = V(g_sub)$size,
+       vertex.color = V(g_sub)$color,
+       vertex.frame.color = "black",
+       vertex.label.color = "black",
+       vertex.label.family = "Arial",
+       vertex.label.cex = 0,
+       main = title,
+       font.main = 1)
+  legend("topleft",
+         legend = c("Positive association", "Negative association"),
+         col = c("firebrick", "steelblue"),
+         lwd = 2,
+         bty = "n")
+}
+par(mfrow = c(1,2))
+plot_subnetwork(g_GI_sub, "Graphosoma italicum - Top 20 hubs")
+plot_subnetwork(g_LE_sub, "Lygaeus equestris - Top 20 hubs")
+#####################################################
+# Identify the ranking of the 10 most connected bacterial taxa
+top_taxa_by_degree <- function(g, n = 10) {
+  data.frame(
+    Taxon = V(g)$name,
+    Degree = degree(g),
+    Prevalence = V(g)$prevalence
+  ) %>%
+    arrange(desc(Degree)) %>%
+    head(n)
+}
+top_taxa_by_strength <- function(g, n = 10) {
+  data.frame(
+    Taxon = V(g)$name,
+    Degree = degree(g),
+    Strength = strength(g, weights = abs(E(g)$weight)),
+    Prevalence = V(g)$prevalence
+  ) %>%
+    arrange(desc(Strength)) %>%
+    head(n)
+}
+top10_GI_strength <- top_taxa_by_strength(g_GI)
+top10_GI_strength
+top10_LE_strength <- top_taxa_by_strength(g_LE)
+top10_LE_strength
+```
