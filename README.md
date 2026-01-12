@@ -548,6 +548,32 @@ ggplot(scores_pcoa, aes(x = PCoA1, y = PCoA2, color = species, shape = family)) 
 
 The raw figures generated in R are available on this GitHub page under the names `Stinkbugs_PCoA_raw_fig_BRAY.png` and `Stinkbugs_PCoA_raw_fig_JACCARD.png`.
 
+Here is the script for the PERMANOVA tests:
+
+```
+#### R ####
+# PERMANOVA tests
+meta <- data %>%
+  select(sample, species, family) %>%
+  distinct() %>%
+  column_to_rownames("sample")
+#tests bray
+perm_species <- adonis2(bray_dist ~ species, data = meta,  permutations = 9999)
+perm_species
+perm_family <- adonis2(bray_dist ~ family, data = meta,  permutations = 9999)
+perm_family
+perm_both <- adonis2(bray_dist ~ family + species, data = meta,  permutations = 9999,  by = "margin")
+perm_both
+#tests jaccard
+jacc_dist <- vegdist(abundance_matrix, method = "jaccard") 
+perm_species_jacc <- adonis2(jacc_dist ~ species, data = meta, permutations = 9999)
+perm_species_jacc
+perm_family_jacc <- adonis2(jacc_dist ~ family, data = meta, permutations = 9999)
+perm_family_jacc
+perm_both_jacc <- adonis2(jacc_dist ~ family + species, data = meta, permutations = 9999, by = "margin")
+perm_both_jacc
+```
+
 ### **Phylosymbiosis**
 
 To assess whether a phylosymbiosis pattern structures the microbiome of stinkbugs, we first constructed a distance matrix for the stinkug species. To do this, we collected COI sequences from 15 species (see the supplementary table online), aligned them using Clustal Omega (v.1.2.2) (<https://doi.org/10.1002/pro.3290>) implemented in the Unipro UGENE software (v.52.0) (<https://ugene.net/>, <https://doi.org/10.1093/bioinformatics/bts091>), and obtained a final alignment of 211 amino acids by removing gaps '-'. The COI sequences have been deposited in this GitHub repository under the name `coi_aa.fasta`. Using UGENE, we calculated a multiple sequence alignment distance matrix (in %) based on Hamming dissimilarity. This matrix is available as `matrix_aa_distance.txt`.
