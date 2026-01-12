@@ -448,7 +448,7 @@ ggplot(alpha_div, aes(y = sample, x = Chao1)) +
 
 The raw figure generated in R is available on this GitHub page under the name `Stinkbugs_chao1_raw_fig.png`.
 
-We then used a Wilcoxon rank sum test with continuity correction to statistically compare Chao 1 indices depending of the proportion of reads of the two most dominant bacteria Pantoea/Erwinia and Serratia. Here is the script used for Pantoea-Erwinia:
+We then used aWilcoxon rank sum tests with continuity correction to statistically compare Chao 1 indices depending of the proportion of reads of the two most dominant bacteria *Pantoea/Erwinia* and *Serratia*. Here is the script used for Pantoea-Erwinia:
 
 ```
 #### R ####
@@ -469,6 +469,15 @@ table(alpha_div2$group_pantoea)
 wilcox.test(Chao1 ~ group_pantoea, data = alpha_div2, alternative = "greater")
 # plot
 boxplot(Chao1 ~ group_pantoea, data = alpha_div2)
+```
+
+Kruskall-Wallis tests were also used to test the effect of species and family on chao 1:
+
+```
+#### R ####
+#Kruskall Wallis test 
+kruskal.test(Chao1 ~ species, data = alpha_div)
+kruskal.test(Chao1 ~ family, data = alpha_div)
 ```
 
 ### **PCoA**
