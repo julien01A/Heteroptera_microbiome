@@ -448,6 +448,29 @@ ggplot(alpha_div, aes(y = sample, x = Chao1)) +
 
 The raw figure generated in R is available on this GitHub page under the name `Stinkbugs_chao1_raw_fig.png`.
 
+We then used a Wilcoxon rank sum test with continuity correction to statistically compare Chao 1 indices depending of the proportion of reads of the two most dominant bacteria Pantoea/Erwinia and Serratia. Here is the script used for Pantoea-Erwinia:
+
+```
+#### R ####
+# Wilcoxon test unilateral
+# calcul the proportion of reads matching with Pantoea-Erwinia and create a new column for samples =>30% of reads vs <30%
+pantoea_prop <- data %>%
+  select(sample, `Pantoea-Erwinia`, Total_nb_reads) %>%
+  mutate(
+    prop_pantoea = `Pantoea-Erwinia` / Total_nb_reads,
+    group_pantoea = ifelse(prop_pantoea >= 0.3, ">=30%", "<30%")
+  ) %>%
+  select(sample, prop_pantoea, group_pantoea)
+alpha_div2 <- alpha_div %>%
+  left_join(pantoea_prop, by = "sample") %>%
+  mutate(group_pantoea = factor(group_pantoea, levels = c("<30%", ">=30%")))
+table(alpha_div2$group_pantoea)
+# test
+wilcox.test(Chao1 ~ group_pantoea, data = alpha_div2, alternative = "greater")
+# plot
+boxplot(Chao1 ~ group_pantoea, data = alpha_div2)
+```
+
 ### **PCoA**
 
 Here, we calculated the Bray-Curtis and Jaccard distances as proxies for beta diversity. The Bray–Curtis distance measures dissimilarity between two samples based on the relative abundances of bacterial genera, ranging from 0 (identical) to 1 (completely different), whereas the Jaccard distance is based on presence–absence data. We then performed a PCoA on this distance matrices, which allows us to reduce the complex multivariate relationships into a few axes that capture the main patterns of variation between samples, making it easier to visualize similarities and differences in microbiome composition. The script is as follows:
