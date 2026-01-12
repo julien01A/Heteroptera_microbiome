@@ -769,17 +769,23 @@ par(mfrow = c(1,2))
 plot_subnetwork(g_GI_sub, "Graphosoma italicum - Top 20 hubs")
 plot_subnetwork(g_LE_sub, "Lygaeus equestris - Top 20 hubs")
 #####################################################
-# Identify the ranking of the 10 most connected bacterial taxa
-top_taxa_by_degree <- function(g, n = 10) {
+```
+
+We then compared the degrees and strengths of the top 20 most connected bacteria between G. italicum and L. equestris using Wilcoxon tests:
+```
+#### R ####
+# Identify the ranking of the 20 most connected bacterial taxa
+top_taxa_by_degree <- function(g, n = 20) {
   data.frame(
     Taxon = V(g)$name,
     Degree = degree(g),
+    Strength = strength(g, weights = abs(E(g)$weight)),
     Prevalence = V(g)$prevalence
   ) %>%
     arrange(desc(Degree)) %>%
     head(n)
 }
-top_taxa_by_strength <- function(g, n = 10) {
+top_taxa_by_strength <- function(g, n = 20) {
   data.frame(
     Taxon = V(g)$name,
     Degree = degree(g),
@@ -789,8 +795,16 @@ top_taxa_by_strength <- function(g, n = 10) {
     arrange(desc(Strength)) %>%
     head(n)
 }
-top10_GI_strength <- top_taxa_by_strength(g_GI)
-top10_GI_strength
-top10_LE_strength <- top_taxa_by_strength(g_LE)
-top10_LE_strength
+top20_GI <- top_taxa_by_degree(g_GI, n = 20) %>%
+  mutate(Group = "GI")
+top20_LE <- top_taxa_by_degree(g_LE, n = 20) %>%
+  mutate(Group = "LE")
+top20_all <- bind_rows(top20_GI, top20_LE)
+table(top20_all$Group)
+#test
+wilcox.test(Degree ~ Group, data = top20_all, alternative = "less")
+wilcox.test(Strength ~ Group, data = top20_all, alternative = "less")
+# plot
+boxplot(Degree ~ Group, data = top20_all)
+boxplot(Strength ~ Group, data = top20_all)
 ```
