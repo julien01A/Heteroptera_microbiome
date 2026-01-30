@@ -1,4 +1,4 @@
-# **Stinkbugs microbiome**
+# **Host-specific bacterial communities in Heteroptera**
 
 ## 0. Quality controle of raw-read files
 
@@ -173,7 +173,7 @@ The workflow then performs a phylogenetic analysis step called `FROGS Tree`, whi
 
 Then, we created a `variable.tsv` file containing the `species` and `family` names for each sample and we uploaded it on Galaxy.
 
-Finally, to create one final microbiome data file `8-Stinkbugs_microbiome.rdata` available for numeric analysis, we used 3 files: `biomfile`, `samplefile`, `treefile` using a final step called `FROGSSTAT Phyloseq Import Data` as follow:
+Finally, to create one final microbiome data file `8-Heteroptera_microbiome.rdata` available for numeric analysis, we used 3 files: `biomfile`, `samplefile`, `treefile` using a final step called `FROGSSTAT Phyloseq Import Data` as follow:
 ```
 #### Galaxy / FROGSSTAT Phyloseq Import Data ####
 # Tool Parameters
@@ -230,15 +230,15 @@ write.xlsx(aggregated, output_file) #export the new .xslx file
 
 **Step3.** Manually inspect the `5-abundance_aggregate.xlsx` file obtained. Remove the `column 1...` if present and do the necessary changed to feat with the most appropriate file for statistic analyses (eg. sample in lines, Bacterial genera in columns), etc. 
 
-Our two final files `8-Stinkbugs_microbiome.rdata` and `5-Stinkbugs-abundance.xlsx` were available in this GitHub page.
+Our two final files `8-Heteroptera_microbiome.rdata` and `5-Heteroptera-abundance.xlsx` were available in this GitHub page.
 
 ## 2. Microbiome graphical representation and analyses
 
-The R scripts used to analyse and represent the microbiome of stinkbugs are available above.
+The R scripts used to analyse and represent the microbiome of Heteroptera are available above.
 
 ### **Heatmap of the 15 most abundant bacterial genera**
 
-Here, we aimed to represent the most abundant bacterial genera in terms of the relative number of reads per species. To define the relative number of reads for each sample, we first created a new column in the `5-Stinkbugs-abundance.xlsx` file called `Total_nb_reads`, corresponding to the sum of all bacterial reads for each sample. We then used this column to calculate the relative number of reads per sample for each bacterial genus. The script is as follows:
+Here, we aimed to represent the most abundant bacterial genera in terms of the relative number of reads per species. To define the relative number of reads for each sample, we first created a new column in the `5-Heteroptera-abundance.xlsx` file called `Total_nb_reads`, corresponding to the sum of all bacterial reads for each sample. We then used this column to calculate the relative number of reads per sample for each bacterial genus. The script is as follows:
 
 ```
 #### R ####
@@ -246,7 +246,7 @@ Here, we aimed to represent the most abundant bacterial genera in terms of the r
 library(tidyverse)
 library(pheatmap)
 # load the data file
-data <- read.delim("5-Stinkbugs-abundance.txt", header = TRUE, sep = "\t", check.names = FALSE)
+data <- read.delim("5-Heteroptera-abundance.txt", header = TRUE, sep = "\t", check.names = FALSE)
 # Define columns of metadata 
 meta_cols <- c("sample_full_name", "sample", "species", "family","Total_nb_reads")
 bact_cols <- setdiff(colnames(data), meta_cols)
@@ -266,7 +266,7 @@ data_rel <- data_rel %>%
 # Select the Top14 and other columns
 microbiome_15 <- data_rel %>%
   select(species, all_of(top14_genera), Other)
-#Agregate data by stinkbugs species
+#Agregate data by Heteroptera species
 microbiome_species <- microbiome_15 %>%
   group_by(species) %>%
   summarise(across(all_of(c(top14_genera, "Other")), mean, na.rm = TRUE))
@@ -293,7 +293,7 @@ p <- pheatmap(heatmap_matrix, scale = "none", cluster_rows = FALSE, cluster_cols
 p
 ```
 
-The raw figure generated in R is available on this GitHub page under the name `Stinkbugs_heatmap_raw_fig.png`. The figure was then manually post-processed for graphical adaptations.
+The raw figure generated in R is available on this GitHub page under the name `Heteroptera_heatmap_raw_fig.png`. The figure was then manually post-processed for graphical adaptations.
 
 ### **Composition plot of microbiome by samples**
 
@@ -306,7 +306,7 @@ library(tidyverse)
 library(ggplot2)
 library(RColorBrewer)
 # load the data file
-data <- read.delim("5-Stinkbugs-abundance.txt", header = TRUE, sep = "\t", check.names = FALSE)
+data <- read.delim("5-Heteroptera-abundance.txt", header = TRUE, sep = "\t", check.names = FALSE)
 meta_cols <- c("sample_full_name", "sample", "samplebis", "species", "family", "Total_nb_reads")
 bact_cols <- setdiff(colnames(data), meta_cols)
 # Relative proportion of reads by samples
@@ -374,10 +374,10 @@ ggplot(composition_long, aes(x = relative_abundance, y = sample, fill = genus)) 
     x = "Relative abundance (%)",
     y = "Sample",
     fill = "Bacterial genus",
-    title = "Microbiome composition of stinkbug samples"
+    title = "Microbiome composition of Heteroptera samples"
   )
 ```
-The raw figure generated in R is available on this GitHub page under the name `Stinkbugs_compositionplot_raw_fig.png`.
+The raw figure generated in R is available on this GitHub page under the name `Heteroptera_compositionplot_raw_fig.png`.
 
 ### **Chao1 index by samples**
 
@@ -391,7 +391,7 @@ library(dplyr)
 library(vegan)
 library(ggplot2)
 # load the data file
-data <- read.delim("5-Stinkbugs-abundance.txt", header = TRUE, sep = "\t", check.names = FALSE)
+data <- read.delim("5-Heteroptera-abundance.txt", header = TRUE, sep = "\t", check.names = FALSE)
 # Define columns of metadata 
 meta_cols <- c("sample_full_name", "sample", "samplebis", "species","family", "Total_nb_reads")
 bact_cols <- setdiff(colnames(data), meta_cols)
@@ -446,7 +446,7 @@ ggplot(alpha_div, aes(y = sample, x = Chao1)) +
   labs(y = "Sample", x = "Chao1 index")
 ```
 
-The raw figure generated in R is available on this GitHub page under the name `Stinkbugs_chao1_raw_fig.png`.
+The raw figure generated in R is available on this GitHub page under the name `Heteroptera_chao1_raw_fig.png`.
 
 We then used aWilcoxon rank sum tests with continuity correction to statistically compare Chao 1 indices depending of the proportion of reads of the two most dominant bacteria *Pantoea/Erwinia* and *Serratia*. Here is the script used for Pantoea-Erwinia:
 
@@ -491,7 +491,7 @@ library(tidyverse)
 library(vegan)
 library(ggplot2)
 # load the data file
-data <- read.delim("5-Stinkbugs-abundance.txt", header = TRUE, sep = "\t", check.names = FALSE)
+data <- read.delim("5-Heteroptera-abundance.txt", header = TRUE, sep = "\t", check.names = FALSE)
 # Define columns of metadata 
 meta_cols <- c("sample_full_name", "sample", "samplebis", "species", "family", "Total_nb_reads")
 bact_cols <- setdiff(colnames(data), meta_cols)
@@ -546,7 +546,7 @@ ggplot(scores_pcoa, aes(x = PCoA1, y = PCoA2, color = species, shape = family)) 
   theme(panel.grid = element_blank(),legend.position = "right")
 ```
 
-The raw figures generated in R are available on this GitHub page under the names `Stinkbugs_PCoA_raw_fig_BRAY.png` and `Stinkbugs_PCoA_raw_fig_JACCARD.png`.
+The raw figures generated in R are available on this GitHub page under the names `Heteroptera_PCoA_raw_fig_BRAY.png` and `Heteroptera_PCoA_raw_fig_JACCARD.png`.
 
 Here is the script for the PERMANOVA tests:
 
@@ -576,7 +576,7 @@ perm_both_jacc
 
 ### **Phylosymbiosis**
 
-To assess whether a phylosymbiosis pattern structures the microbiome of stinkbugs, we first constructed a distance matrix for the stinkug species. To do this, we collected COI sequences from 15 species (see the supplementary table online), aligned them using Clustal Omega (v.1.2.2) (<https://doi.org/10.1002/pro.3290>) implemented in the Unipro UGENE software (v.52.0) (<https://ugene.net/>, <https://doi.org/10.1093/bioinformatics/bts091>), and obtained a final alignment of 211 amino acids by removing gaps '-'. The COI sequences have been deposited in this GitHub repository under the name `coi_aa.fasta`. Using UGENE, we calculated a multiple sequence alignment distance matrix (in %) based on Hamming dissimilarity. This matrix is available as `matrix_aa_distance.txt`.
+To assess whether a phylosymbiosis pattern structures the microbiome of Heteroptera, we first constructed a distance matrix for the stinkug species. To do this, we collected COI sequences from 15 species (see the supplementary table online), aligned them using Clustal Omega (v.1.2.2) (<https://doi.org/10.1002/pro.3290>) implemented in the Unipro UGENE software (v.52.0) (<https://ugene.net/>, <https://doi.org/10.1093/bioinformatics/bts091>), and obtained a final alignment of 211 amino acids by removing gaps '-'. The COI sequences have been deposited in this GitHub repository under the name `coi_aa.fasta`. Using UGENE, we calculated a multiple sequence alignment distance matrix (in %) based on Hamming dissimilarity. This matrix is available as `matrix_aa_distance.txt`.
 
 We then selected 15 representative specimens to compare their microbiota with the phylogenetic alignment, i.e., the multiple sequence alignment distance matrix. One specimen per species was chosen; for species with multiple specimens, we selected the individual with the highest Chao1 index. The microbiota matrix used was `abundance_phylosymbiosis.txt`, also deposited in the GitHub repository. Bray–Curtis and Jaccard distances were used to quantify microbiota dissimilarities. Finally, a Mantel test (spearman's correlation, 9,999 permutations) was performed to statistically estimate the correlation between the phylogenetic distance matrix and the microbiota dissimilarity matrix. The script used is as follows:
 
@@ -607,7 +607,7 @@ mantel_df <- data.frame(
   Host = as.vector(host_dist),
   Microbiome = as.vector(micro_dist)
 )
-p_mantel <- ggplot(mantel_df, aes(x = Host, y = Microbiome)) + geom_point(size = 5, alpha = 0.6) + geom_smooth(method = "lm", se = TRUE, color="black",fill="grey70") + labs(x = "Phylogenetic distance of stinkbug species", y = "Microbiome dissimilarity (Bray)") + theme_classic(base_size = 12)
+p_mantel <- ggplot(mantel_df, aes(x = Host, y = Microbiome)) + geom_point(size = 5, alpha = 0.6) + geom_smooth(method = "lm", se = TRUE, color="black",fill="grey70") + labs(x = "Phylogenetic distance of Heteroptera species", y = "Microbiome dissimilarity (Bray)") + theme_classic(base_size = 12)
 p_mantel
 ```
 
@@ -628,7 +628,7 @@ library(tidyverse)
 library(compositions)
 library(igraph)
 # load the data file
-data <- read.delim("5-Stinkbugs-abundance.txt", header = TRUE, sep = "\t", check.names = FALSE)
+data <- read.delim("5-Heteroptera-abundance.txt", header = TRUE, sep = "\t", check.names = FALSE)
 # Select the two species G. italicum and L. equestris
 data_filt <- data %>%
   filter(species %in% c("Graphosoma_italicum", "Lygaeus_equestris"))
