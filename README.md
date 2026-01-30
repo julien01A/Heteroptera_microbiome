@@ -1,4 +1,12 @@
-# **Host-specific bacterial communities in Heteroptera**
+# **Host-specific bacterial communities in Heteroptera - GitHub Repository**
+
+This repository accompanies the manuscript on microbial communities across 17 wild Heteroptera species. The study aimed to characterize the diversity, composition, and network structure of these microbiomes, and to explore how host evolutionary relationships (phylosymbiosis) shape bacterial communities.
+
+We used 16S rRNA gene sequencing and community-level analyses to survey microbial diversity, identify dominant symbionts, and investigate the roles of rare bacterial taxa in microbial network stability.
+
+This GitHub repository contains all commands, scripts, and key intermediate files used in the analyses.
+
+
 
 ## 0. Quality controle of raw-read files
 
@@ -29,6 +37,7 @@ mkdir -p Quality_NanoComp_all_samples
 fastq_files=$(ls *.fastq.gz)
 NanoComp -t 2 --fastq $fastq_files -o Quality_NanoComp_all_samples
 ```
+
 
 ## 1. Bioinformatic processing and taxonomic assignment of 16S metabarcoding raw-read files
 
@@ -231,6 +240,7 @@ write.xlsx(aggregated, output_file) #export the new .xslx file
 **Step3.** Manually inspect the `5-abundance_aggregate.xlsx` file obtained. Remove the `column 1...` if present and do the necessary changed to feat with the most appropriate file for statistic analyses (eg. sample in lines, Bacterial genera in columns), etc. 
 
 Our two final files `8-Heteroptera_microbiome.rdata` and `5-Heteroptera-abundance.xlsx` were available in this GitHub page.
+
 
 ## 2. Microbiome graphical representation and analyses
 
