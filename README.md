@@ -1,6 +1,6 @@
 # **Host-specific bacterial communities in Heteroptera - GitHub Repository**
 
-This repository accompanies the manuscript on microbial communities across 17 wild Heteroptera species. The study aimed to characterize the diversity, composition, and network structure of these microbiomes, and to explore how host evolutionary relationships (phylosymbiosis) shape bacterial communities.
+This repository accompanies the manuscript on microbial communities across 17 wild Heteroptera species. The study aimed to characterize the diversity, composition, and network structure of these microbiomes, and to explore how host evolutionary relationships shape bacterial communities (phylosymbiosis).
 
 We used 16S rRNA gene sequencing and community-level analyses to survey microbial diversity, identify dominant symbionts, and investigate the roles of rare bacterial taxa in microbial network stability.
 
