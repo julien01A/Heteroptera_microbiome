@@ -254,7 +254,7 @@ write_xlsx(df, "D:/THESE_Julien/Papier_stinkbugs/5-Stinkbugs-abundance100.xlsx")
 
 ```
 
-Our two final files `8-Heteroptera_microbiome.rdata` and `5-Heteroptera-abundance.xlsx` were available in this GitHub page.
+The final file `5-Heteroptera-abundance100.xlsx` is available in this GitHub page.
 
 
 ## 2. Microbiome graphical representation and analyses
