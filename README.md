@@ -239,6 +239,12 @@ write.xlsx(aggregated, output_file) #export the new .xslx file
 
 **Step3.** Manually inspect the `5-abundance_aggregate.xlsx` file obtained. Remove the `column 1...` if present and do the necessary changed to feat with the most appropriate file for statistic analyses (eg. sample in lines, Bacterial genera in columns), etc. 
 
+**Step4.** Finally, we adopted a 100-read threshold for subsequent analyses, removing all assignments supported by fewer reads:
+```
+#### R ####
+
+```
+
 Our two final files `8-Heteroptera_microbiome.rdata` and `5-Heteroptera-abundance.xlsx` were available in this GitHub page.
 
 
@@ -337,16 +343,11 @@ data_rel <- data_rel %>%
 # Select the Top20 and other columns
 composition_df <- data_rel %>%
   select(sample, species, all_of(top20_genera), Other)
-
 # Reshape to long format (required for ggplot)
-composition_long <- composition_df %>%
-  pivot_longer(
-    cols = c(all_of(top20_genera), Other),
-    names_to = "genus",
-    values_to = "relative_abundance"
-  ) %>%
-  mutate(relative_abundance = relative_abundance * 100)  # %
-
+composition_long <- composition_long %>%
+  group_by(sample) %>%
+  mutate(relative_abundance = ifelse(genus == "Other", 100 - sum(relative_abundance[genus != "Other"]),relative_abundance)) %>%
+  ungroup()
 # Define species order
 species_order <- c("Picromerus_bidens","Graphosoma_italicum","Graphosoma_semipunctatum","Eurydema_oleracea","Eurydema_ornata","Nezara_viridula","Acrosternum_hegeeri",
   "Palomena_prasina","Carpocoris_sp","Dolycoris_baccarum","Rhaphigaster_nebulosa","Halyomorpha_halys","Pentatomid_sp","Pyrrhocoris_apterus","Scantius_aegyptius",
