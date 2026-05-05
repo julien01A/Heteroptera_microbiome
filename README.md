@@ -43,7 +43,7 @@ NanoComp -t 2 --fastq $fastq_files -o Quality_NanoComp_all_samples
 
 All metabarcoding bioinformatic analyses were performed using a step-by-step workflow with the FROGS pipeline implemented on Galaxy.
 
-To begin, all demultiplexed raw-read files, available at `PASTE THE NCBI LINK`, were compiled in a single `ARCHIVE.tar` file.
+To begin, all demultiplexed raw-read files, available at `SAMN54884025-SAMN54884069`, were compiled in a single `ARCHIVE.tar` file.
 
 The following dependencies and versions were used:
 ```
